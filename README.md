@@ -27,7 +27,7 @@ This is accomplished by:
 * Pulling down the newest release of the Web Platform via Github API
 * Backing up existing production Web Platform 
 * Extracting the Web Platform release to the defined ILLiad Web Platform location
-    - NOTE: This will overwrite existing pre-dfined files based on file extenstion filters. 
+    - NOTE: This will overwrite existing pre-defined files based on file extenstion filters. 
 
 The following files are expected to exist in the directory
 from which this module is executed:
