@@ -3,7 +3,7 @@ import secrets
 from zipfile import ZipFile
 from datetime import date
 import os
-from os.path import basename
+import shutil
 
 
 git_repo = secrets.git_repo
@@ -25,17 +25,25 @@ with ZipFile("illiad-web-backup-"+ date.today().strftime("%Y-%m-%d") +".zip", "w
 # Get Release
 latest = requests.get("https://api.github.com/repos/" + secrets.git_repo + "/releases/latest", auth=user)
 
+# Initialize extracted directory var 
+newDir = ""
+
 # Download zip of latest release
 latest_zip = requests.get(latest.json()['zipball_url'], auth=user)
 
 # Save latest release 
-with open("newest_zip.zip", "wb") as file:
+with open(latest.json()['tag_name']+'.zip', "wb") as file:
     file.write(latest_zip.content)
 
-# Extract CSS, HTML, and JS from newest release
-with ZipFile('newest_zip.zip', 'r') as zipObj:
-   for fileName in zipObj.namelist():
-       if fileName.endswith('.htm') or fileName.endswith('.html') or fileName.endswith('.css') or fileName.endswith('.js'): 
-           zipObj.extract(fileName, 'illiad-web')
 
+# Extract CSS, HTML, and JS from newest release and set new directory base
+with ZipFile(latest.json()['tag_name']+'.zip', 'r') as zipObj:
+    newDir=zipObj.namelist()[0]
+    for fileName in zipObj.namelist():
+       if fileName.endswith('.htm') or fileName.endswith('.html') or fileName.endswith('.css') or fileName.endswith('.js') or 'css' in fileName: 
+           zipObj.extract(fileName)
+
+print(newDir)
+# Copy extracted zip to defined ILLiad directory
+shutil.copytree(newDir, dirName, dirs_exist_ok=True)
 
