@@ -67,7 +67,7 @@ def pull(branch):
         with ZipFile(tag_name+'.zip', 'r') as zipObj:
             newDir=zipObj.namelist()[0]
             for fileName in zipObj.namelist():
-                if fileName.endswith('.htm') or fileName.endswith('.html') or fileName.endswith('.css') or fileName.endswith('.js') or 'css' in fileName: 
+                if fileName.endswith('.htm') or fileName.endswith('.html') or fileName.endswith('.css') or fileName.endswith('.js'): 
                     zipObj.extract(fileName)
 
         print(newDir)
