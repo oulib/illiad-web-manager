@@ -4,18 +4,13 @@ from zipfile import ZipFile
 import datetime
 import os
 import shutil
-from pprint import pprint
 import sys
 
-def pull(branch):
-    git_repo = secrets.git_repo
-    user=(secrets.git_user, secrets.git_password)
-    dirName = secrets.host_illiad_dir
-
+def pull(branch, targetDir, git_repo, user):
     # Backup Current CSS, HTML, and JS from ILLiad Web
     with ZipFile("illiad-web-backup-"+ datetime.date.today().strftime("%Y-%m-%d") +".zip", "w") as backup:
         # Iterate over all the files in directory
-        for folderName, subfolders, filenames in os.walk(dirName):
+        for folderName, subfolders, filenames in os.walk(targetDir):
             for fileName in filenames:
                 if fileName.endswith('.htm') or fileName.endswith('.html') or fileName.endswith('.css') or fileName.endswith('.js'): 
                     #create complete filepath of file in directory
@@ -40,8 +35,6 @@ def pull(branch):
             if branch in tn:
                 branch_releases.append({tn: {"published_at":pa, "zipball_url": zu}})
             
-
-        pprint(branch_releases)
         latest_stamp = datetime.datetime.strptime("2000-09-22T21:51:49Z","%Y-%m-%dT%H:%M:%SZ")
         zip_url = ""
         for tag in branch_releases:
@@ -53,11 +46,12 @@ def pull(branch):
 
         # Initialize extracted directory var 
         newDir = ""
-
+        if zip_url == "":
+            print("No ZIP found for provided branch...\nexiting.")
+            sys.exit(1)
         # Download zip of latest release
         latest_zip = requests.get(zip_url, auth=user)
 
-        print(tag_name)
         # Save latest release 
         with open(tag_name+'.zip', "wb") as file:
             file.write(latest_zip.content)
@@ -70,10 +64,24 @@ def pull(branch):
                 if fileName.endswith('.htm') or fileName.endswith('.html') or fileName.endswith('.css') or fileName.endswith('.js'): 
                     zipObj.extract(fileName)
 
-        print(newDir)
         # Copy extracted zip to defined ILLiad directory
-        shutil.copytree(newDir, dirName, dirs_exist_ok=True)
+        shutil.copytree(newDir, targetDir, dirs_exist_ok=True)
 
 
 if __name__ == "__main__":
-   pull(sys.argv[1])
+    try:
+        git_repo = secrets.git_repo
+        user = (secrets.git_user, secrets.git_password)
+        pull(sys.argv[1], secrets.testDir, git_repo, user)
+        if sys.argv[1].startswith("-h") or sys.argv[1].startswith("--h"):
+            print("usage: pull_branch.py BRANCH_NAME")
+            print("\tThis may be main/master for production instances or testweb for test branches")
+    except AttributeError:
+        print("The following vars must be defined in expected secrets file:\n")
+        print("git_repo = GIT_ORG/GIT_REPO")
+        print("git_user = GIT_USERNAME")
+        print("git_password = GIT_PASSWORD")
+        print("testDir = \"Location of ILLiad testweb directory\"\n(Typically \"C:\\inetpub\\ILLiad\\testweb\\\"\n")
+        print("prodDir = \"Location of production ILLiad installation directory\"\n(Typically \"C:\\inetpub\\ILLiad\\\"")
+  
+        
