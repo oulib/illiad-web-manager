@@ -98,7 +98,7 @@ if __name__ == "__main__":
         print("testDir = \"Location of ILLiad testweb directory\"\n(Typically \"C:\\inetpub\\ILLiad\\testweb\\\"\n")
         print("prodDir = \"Location of production ILLiad installation directory\"\n(Typically \"C:\\inetpub\\ILLiad\\\"")
     finally:
-         for item in os.scandir(os.getcwd()):
+         for item in os.scandir('C:\\illiad-web-manager\\'):
              if item.is_dir():
                  shutil.rmtree(item.path)
              if item.name.endswith(".zip") and (item.stat().st_mtime < (time.time() - (7*86400))):
