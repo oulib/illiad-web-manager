@@ -6,6 +6,7 @@ import time
 import os
 import shutil
 import sys
+import logging
 
 def pull(branch, targetDir, git_repo, user):
         # Get Releases
@@ -24,9 +25,17 @@ def pull(branch, targetDir, git_repo, user):
             if branch in tn:
                 branch_releases.append({tn: {"published_at":pa, "zipball_url": zu}})
 
-        latest_stamp = datetime.datetime.utcfromtimestamp(os.path.getmtime(targetDir))
+        # Initialize date logic vars
+        latest_stamp = datetime.datetime(1970,1,1)
         HAS_NEW_RELEASE = False
         zip_url = ""
+
+        for item in os.scandir('C:\\illiad-web-manager\\'):
+             if item.name.endswith(".zip") and item.name.startswith(branch):
+                     if latest_stamp < datetime.datetime.strptime("".join(item.name.split("-")[1:]),"%Y%m%d%H%M%S.zip"):
+                             latest_stamp = datetime.datetime.strptime("".join(item.name.split("-")[1:]),"%Y%m%d%H%M%S.zip")
+        
+       
         for tag in branch_releases:
             for key,release in tag.items():
                 if latest_stamp < release['published_at']:
@@ -36,11 +45,12 @@ def pull(branch, targetDir, git_repo, user):
                     zip_url = release['zipball_url']
 
         if HAS_NEW_RELEASE is False:
+            logging.info("No release newer than existing found for provided branch")
             print("No release newer than existing found for provided branch...\nexiting.")
             sys.exit(1)
 
         # Backup Current CSS, HTML, and JS from ILLiad Web
-        with ZipFile("illiad-web-backup-"+branch+"-"+ datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S") +".zip", "w") as backup:
+        with ZipFile('C:\\illiad-web-manager\\'+"illiad-web-backup-"+branch+"-"+ datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S") +".zip", "w") as backup:
             # Iterate over all the files in directory
             for folderName, subfolders, filenames in os.walk(targetDir):
                 for fileName in filenames:
@@ -60,12 +70,12 @@ def pull(branch, targetDir, git_repo, user):
         latest_zip = requests.get(zip_url, auth=user)
 
         # Save latest release 
-        with open(tag_name+'.zip', "wb") as file:
+        with open('C:\\illiad-web-manager\\'+tag_name+'.zip', "wb") as file:
             file.write(latest_zip.content)
 
 
         # Extract CSS, HTML, and JS from newest release and set new directory base
-        with ZipFile(tag_name+'.zip', 'r') as zipObj:
+        with ZipFile('C:\\illiad-web-manager\\'+tag_name+'.zip', 'r') as zipObj:
             newDir=zipObj.namelist()[0]
             for fileName in zipObj.namelist():
                 if fileName.endswith('.htm') or fileName.endswith('.html') or fileName.endswith('.css') or fileName.endswith('.js'): 
@@ -76,6 +86,8 @@ def pull(branch, targetDir, git_repo, user):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(format = '%(asctime)s - %(levelname)s - %(message)s')
+    os.chdir('C:\\illiad-web-manager\\')
     try:
         git_repo = secrets.git_repo
         user = (secrets.git_user, secrets.git_password)
